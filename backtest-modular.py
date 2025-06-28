@@ -15,8 +15,9 @@ from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 
 # Hyperparameters and configuration
-DATA_TYPE='futures_data'
-# DATA_TYPE='reg_data'
+# DATA_TYPE is defined in config.py
+# Possible values include 'futures_data' or 'retail_data'
+from config import DATA_TYPE
 ALGOS_TO_USE    = ['a2c', 'ddpg', 'ppo', 'td3', 'sac']
 TRAIN_FILE      = f'{DATA_TYPE}/train_data.csv'
 BACKTEST_FILE   = f'{DATA_TYPE}/trade_data.csv'

@@ -11,8 +11,8 @@ from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 # =========================
 # Configuration
 # =========================
-DATA_TYPE='futures_data'
-# DATA_TYPE='retail_data'
+# DATA_TYPE is defined in config.py
+from config import DATA_TYPE
 TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models'
 RESULTS_DIR = f'{DATA_TYPE}/results'
 TRAIN_FILE        = f'{DATA_TYPE}/train_data.csv'  # Preprocessed training CSV
