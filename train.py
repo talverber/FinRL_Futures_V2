@@ -6,7 +6,7 @@ from stable_baselines3.common.logger import configure
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from finrl.agents.stablebaselines3.models import DRLAgent
 from finrl.main import check_and_make_directories
-from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
+from finrl.meta.env_stock_trading.env_futurestrading import FuturesTradingEnv
 
 # =========================
 # Configuration
@@ -123,7 +123,7 @@ def make_vec_env(df: pd.DataFrame) -> SubprocVecEnv:
     Create a SubprocVecEnv of N_ENVS copies of StockTradingEnv.
     """
     def make_env_fn():
-        return StockTradingEnv(
+        return FuturesTradingEnv(
             df=df,
             hmax=HMAX,
             initial_amount=INITIAL_AMOUNT,
@@ -181,4 +181,5 @@ def main():
             break
 
 if __name__ == '__main__':
+    print(os.getcwd())
     main()
