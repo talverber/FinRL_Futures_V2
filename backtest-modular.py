@@ -18,7 +18,7 @@ from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 # DATA_TYPE is defined in config.py
 # Possible values include 'futures_data' or 'retail_data'
 from config import DATA_TYPE
-ALGOS_TO_USE    = ['a2c', 'ddpg', 'ppo', 'td3', 'sac']
+ALGOS_TO_USE    = ['ppo'] #, 'a2c',  'ddpg', 'td3', 'sac']
 TRAIN_FILE      = f'{DATA_TYPE}/train_data.csv'
 BACKTEST_FILE   = f'{DATA_TYPE}/trade_data.csv'
 TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models'
@@ -190,6 +190,9 @@ def main():
         'mvo': mvo_series,
         'dji': dji_series,
     })
+
+    result.to_csv(f'{DATA_TYPE}/backtest.csv')
+
     metrics = {}
     for col in result.columns:
         series = result[col].dropna()

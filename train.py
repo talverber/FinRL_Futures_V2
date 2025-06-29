@@ -18,7 +18,7 @@ RESULTS_DIR = f'{DATA_TYPE}/results'
 TRAIN_FILE        = f'{DATA_TYPE}/train_data.csv'  # Preprocessed training CSV
 
 
-ALGOS_TO_USE      = ['a2c', 'ddpg', 'ppo', 'td3', 'sac']               # Algorithms to train
+ALGOS_TO_USE      = ['ppo'] #, 'ddpg', 'a2c', 'td3', 'sac']               # Algorithms to train
 TIC_TO_USE        = None
 # TIC_TO_USE = ['AAPL', 'INTC'] # Tickers/symbols to include
 # If None, use entire dataset
@@ -34,8 +34,8 @@ else:
 # Total timesteps for each algorithm
 TOTAL_TIMESTEPS = {
     'a2c':  50_000,
-    'ddpg': 50_000,
-    'ppo': 200_000,
+   'ddpg':  50_000,
+    'ppo':  50_000,
     'td3':  50_000,
     'sac':  70_000,
 }
@@ -139,12 +139,29 @@ def make_vec_env(df: pd.DataFrame) -> SubprocVecEnv:
     return SubprocVecEnv([make_env_fn for _ in range(N_ENVS)])
 
 
+def make_single_env(df):
+    # for quick testing without parallelism
+    return FuturesTradingEnv(
+        df=df,
+        hmax=HMAX,
+        initial_amount=INITIAL_AMOUNT,
+        num_stock_shares=[0]*df['tic'].nunique(),
+        buy_cost_pct=[COST_PCT]*df['tic'].nunique(),
+        sell_cost_pct=[COST_PCT]*df['tic'].nunique(),
+        state_space=1 + 2*df['tic'].nunique() + df['tic'].nunique()*len(INDICATORS),
+        stock_dim=df['tic'].nunique(),
+        tech_indicator_list=INDICATORS,
+        action_space=df['tic'].nunique(),
+        reward_scaling=REWARD_SCALING
+    )
+
 def train_and_save(algo: str):
     """
     Train a single algorithm using parallel envs.
     """
     df = load_and_filter_data(TRAIN_FILE)
-    vec_env = make_vec_env(df)
+    #vec_env = make_vec_env(df)
+    vec_env = make_single_env(df)
 
     agent = DRLAgent(env=vec_env)
     model = agent.get_model(algo, model_kwargs=HYPERPARAMS.get(algo, {}))

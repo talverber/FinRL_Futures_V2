@@ -117,10 +117,9 @@ class FuturesTradingEnv(StockTradingEnv):
             if self.turbulence_threshold is not None:
                 if self.turbulence >= self.turbulence_threshold:
                     actions = np.array([-self.hmax] * self.stock_dim)
-            begin_total_asset = self.state[0] + sum(
-                np.array(self.state[1 : (self.stock_dim + 1)])
-                * np.array(self.state[(self.stock_dim + 1) : (self.stock_dim * 2 + 1)])
-            )
+
+            begin_prices = np.array(self.state[1 : (self.stock_dim + 1)])
+
             # print("begin_total_asset:{}".format(begin_total_asset))
 
             argsort_actions = np.argsort(actions)
@@ -150,13 +149,24 @@ class FuturesTradingEnv(StockTradingEnv):
                     self.turbulence = self.data[self.risk_indicator_col].values[0]
             self.state = self._update_state()
 
-            end_total_asset = self.state[0] + sum(
-                np.array(self.state[1 : (self.stock_dim + 1)])
-                * np.array(self.state[(self.stock_dim + 1) : (self.stock_dim * 2 + 1)])
-            )
-            self.asset_memory.append(end_total_asset)
+            end_prices= np.array(self.state[1 : (self.stock_dim + 1)])
+
+            mu = 1
+
+            transaction_cost_term = 0 # 
+
+            sigma_tgt = 0.05
+
+            returns = end_prices - begin_prices
+
+            sigmas = np.array(self.data.volatility)
+       
+            rewards = mu * (actions * returns * sigma_tgt / sigmas - transaction_cost_term)
+
+
+            self.asset_memory.append(sum(end_prices))
             self.date_memory.append(self._get_date())
-            self.reward = end_total_asset - begin_total_asset
+            self.reward = sum(rewards)/self.stock_dim
             self.rewards_memory.append(self.reward)
             self.reward = self.reward * self.reward_scaling
             self.state_memory.append(

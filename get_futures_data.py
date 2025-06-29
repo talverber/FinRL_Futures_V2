@@ -73,6 +73,16 @@ processed = processed[expected_cols]
 # STEP 5: Sort so each date-tic is together (just for cleanliness)
 processed = processed.sort_values(['date','tic']).reset_index(drop=True)
 
+
+def add_volatility(df):
+    wat = df.groupby("tic", as_index=True)['close']\
+        .ewm(com=60, adjust=True).std()
+    wat = wat.droplevel(0)
+    df["volatility"] = wat
+    return df
+
+
+processed = add_volatility(processed)
 # STEP 6: Split into train/trade
 train = data_split(processed, TRAIN_START_DATE, TRAIN_END_DATE)
 trade = data_split(processed, TRADE_START_DATE, TRADE_END_DATE)
@@ -92,7 +102,7 @@ trade = reset_date_idx(trade)
 ordered_cols = [
     'date_idx','date','tic','close','high','low','open','volume','day',
     'macd','boll_ub','boll_lb','rsi_30','cci_30','dx_30',
-    'close_30_sma','close_60_sma','vix','turbulence'
+    'close_30_sma','close_60_sma','vix','turbulence', 'volatility'
 ]
 train = train[ordered_cols]
 trade = trade[ordered_cols]
