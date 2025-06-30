@@ -43,7 +43,13 @@ def download_futures_data(tickers, start, end):
     return pd.concat(df_list, ignore_index=True)
 
 # STEP 1: Download
-df_raw = download_futures_data(FUTURES_TICKERS, TRAIN_START_DATE, TRADE_END_DATE)
+
+RAW_DATA = 'futures_data/raw_data.csv'
+# df_raw = download_futures_data(FUTURES_TICKERS, TRAIN_START_DATE, TRADE_END_DATE)
+# df_raw.to_csv(RAW_DATA)
+
+df_raw = pd.read_csv(RAW_DATA)
+
 
 # STEP 2: Add 'day' column
 df_raw['day'] = pd.to_datetime(df_raw['date']).dt.dayofweek.astype(float)
@@ -81,8 +87,16 @@ def add_volatility(df):
     df["volatility"] = wat
     return df
 
+def add_returns(df):
+    # make placeholders for returns data. to be calculated during training from actual returns
+    inds = ['ret','ret_1M','ret_2M','ret_3M','ret_1Y']
+    for i in inds:
+        df[i] = 0.0
+    return df
 
 processed = add_volatility(processed)
+processed = add_returns(processed)
+
 # STEP 6: Split into train/trade
 train = data_split(processed, TRAIN_START_DATE, TRAIN_END_DATE)
 trade = data_split(processed, TRADE_START_DATE, TRADE_END_DATE)
@@ -102,7 +116,8 @@ trade = reset_date_idx(trade)
 ordered_cols = [
     'date_idx','date','tic','close','high','low','open','volume','day',
     'macd','boll_ub','boll_lb','rsi_30','cci_30','dx_30',
-    'close_30_sma','close_60_sma','vix','turbulence', 'volatility'
+    'close_30_sma','close_60_sma','vix','turbulence', 'volatility',
+    'ret','ret_1M','ret_2M','ret_3M','ret_1Y'
 ]
 train = train[ordered_cols]
 trade = trade[ordered_cols]

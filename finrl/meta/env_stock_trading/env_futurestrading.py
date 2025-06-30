@@ -145,6 +145,8 @@ class FuturesTradingEnv(StockTradingEnv):
 
             # state: s -> s+1
             self.day += 1
+            self.calc_periods_returns() 
+
             self.data = self.df.loc[self.day, :]
             if self.turbulence_threshold is not None:
                 if len(self.df.tic.unique()) == 1:
@@ -160,11 +162,13 @@ class FuturesTradingEnv(StockTradingEnv):
                 * np.array(self.state[(self.stock_dim + 1) : (self.stock_dim * 2 + 1)])
 
 
-            mu = 1 # a.k.a. "Contract Unit" or "Contract Multiplier"            
+            mu = 1 # a.k.a. "Contract Unit" or "Contract Multiplier"
             transaction_cost_term = 0 # 
             sigma_tgt = 0.05
 
-            PnL = end_value - begin_value
+            PnL = end_value - begin_value # a.k.a. returns
+
+            self.df.loc[self.day-1, "ret"] = np.array(PnL)
 
             sigmas = np.array(self.data.volatility)
        
@@ -181,3 +185,16 @@ class FuturesTradingEnv(StockTradingEnv):
             )  # add current state in state_recorder for each step
 
         return self.state, self.reward, self.terminal, False, {}
+
+
+    def calc_periods_returns(self):
+        periods = {'ret_1M': 21,
+                   'ret_2M': 42,
+                   'ret_3M': 63,
+                   'ret_1Y': 252}
+        sigmas = self.df.loc[self.day, ['volatility', 'tic']].set_index('tic')
+
+        for period,days in periods.items():
+            returns = self.df.loc[self.day - days : self.day, ['ret','tic']].groupby('tic').sum()
+            returns = returns['ret'] / (sigmas['volatility'] * np.sqrt(days))
+            self.df.loc[self.day, period] = pd.array(returns)

@@ -17,20 +17,15 @@ from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 # Hyperparameters and configuration
 # DATA_TYPE is defined in config.py
 # Possible values include 'futures_data' or 'retail_data'
-from config import DATA_TYPE
+from config import DATA_TYPE, INDICATORS
 
-TSTP = "20250629-1814"
+TSTP = "20250630-1616"
 
 ALGOS_TO_USE    = ['ppo'] #, 'a2c',  'ddpg', 'td3', 'sac']
 TRAIN_FILE      = f'{DATA_TYPE}/train_data.csv'
 BACKTEST_FILE   = f'{DATA_TYPE}/trade_data.csv'
 TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models/{TSTP}'
 
-if DATA_TYPE == 'retail_data':
-    INDICATORS = ['rmean_7', 'rmean_30', 'vix']
-else:
-    from finrl.config import INDICATORS as STOCK_INDICATORS
-    INDICATORS = STOCK_INDICATORS
 
 INITIAL_AMOUNT  = 1_000_000
 COST_PCT        = 0.001
