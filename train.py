@@ -8,13 +8,17 @@ from finrl.agents.stablebaselines3.models import DRLAgent
 from finrl.main import check_and_make_directories
 from finrl.meta.env_stock_trading.env_futurestrading import FuturesTradingEnv
 
+from datetime import datetime
 # =========================
 # Configuration
 # =========================
 # DATA_TYPE is defined in config.py
 from config import DATA_TYPE
-TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models'
-RESULTS_DIR = f'{DATA_TYPE}/results'
+
+TSTP = datetime.now().strftime("%Y%m%d-%H%M")
+
+TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models/{TSTP}'
+RESULTS_DIR = f'{DATA_TYPE}/results/{TSTP}'
 TRAIN_FILE        = f'{DATA_TYPE}/train_data.csv'  # Preprocessed training CSV
 
 
@@ -29,7 +33,8 @@ if DATA_TYPE == 'retail_data':
     INDICATORS = ['rmean_7', 'rmean_30', 'vix']
 else:
     from finrl.config import INDICATORS as STOCK_INDICATORS
-    INDICATORS = STOCK_INDICATORS
+    INDICATORS = STOCK_INDICATORS #['macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30', 'close_30_sma', 'close_60_sma']
+# not what we need for futures
 
 # Total timesteps for each algorithm
 TOTAL_TIMESTEPS = {

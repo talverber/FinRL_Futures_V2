@@ -18,10 +18,13 @@ from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 # DATA_TYPE is defined in config.py
 # Possible values include 'futures_data' or 'retail_data'
 from config import DATA_TYPE
+
+TSTP = "20250629-1814"
+
 ALGOS_TO_USE    = ['ppo'] #, 'a2c',  'ddpg', 'td3', 'sac']
 TRAIN_FILE      = f'{DATA_TYPE}/train_data.csv'
 BACKTEST_FILE   = f'{DATA_TYPE}/trade_data.csv'
-TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models'
+TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models/{TSTP}'
 
 if DATA_TYPE == 'retail_data':
     INDICATORS = ['rmean_7', 'rmean_30', 'vix']
@@ -35,7 +38,7 @@ HMAX            = 100
 REWARD_SCALING  = 1e-4
 TURB_THRESHOLD  = 70
 RISK_COL        = 'vix'
-OUTPUT_PLOT     = f'{DATA_TYPE}/backtest.png'
+OUTPUT_PLOT     = f'{DATA_TYPE}/results/{TSTP}/backtest.png'
 # Plot dimensions (width, height) in inches
 PLOT_SIZE       = (15, 5)
 
@@ -191,7 +194,7 @@ def main():
         'dji': dji_series,
     })
 
-    result.to_csv(f'{DATA_TYPE}/backtest.csv')
+    result.to_csv(f'{DATA_TYPE}/results/{TSTP}/backtest.csv')
 
     metrics = {}
     for col in result.columns:
@@ -208,7 +211,7 @@ def main():
         }
 
     df_metrics = pd.DataFrame(metrics).T
-    df_metrics.to_csv(f"{DATA_TYPE}/backtest_metrics.csv", float_format="%.6f")
+    df_metrics.to_csv(f"{DATA_TYPE}/results/{TSTP}/backtest_metrics.csv", float_format="%.6f")
     print("✔ metrics written → backtest_metrics.csv")
     plot_and_save(result, OUTPUT_PLOT)
 
