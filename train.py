@@ -68,6 +68,7 @@ HYPERPARAMS = {
         "batch_size":    128,
         "ent_coef":      0.01,
         "learning_rate": 2.5e-4,
+        "device": "cpu"
     },
     #
     # ►  TD3  ◄
@@ -114,7 +115,7 @@ def load_and_filter_data(path: str) -> pd.DataFrame:
     df = df.reset_index(drop=True)
     day_map = {d: i for i, d in enumerate(sorted(df['date'].unique()))}
     df['day'] = df['date'].map(day_map)
-    return df.set_index('day')
+    return df.set_index(['day','tic'], drop=False)
 
 
 def make_vec_env(df: pd.DataFrame) -> SubprocVecEnv:
@@ -159,8 +160,8 @@ def train_and_save(algo: str):
     Train a single algorithm using parallel envs.
     """
     df = load_and_filter_data(TRAIN_FILE)
-    #vec_env = make_vec_env(df)
-    vec_env = make_single_env(df)
+    vec_env = make_vec_env(df)
+    #vec_env = make_single_env(df) for debugging without multiprocessing
 
     agent = DRLAgent(env=vec_env)
     model = agent.get_model(algo, model_kwargs=HYPERPARAMS.get(algo, {}))

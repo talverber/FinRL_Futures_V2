@@ -26,9 +26,23 @@ class FuturesTradingEnv(StockTradingEnv):
         print_verbosity(int): When iterating (step), how often to print stats about state of env
     """
 
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.periods = ['ret_1Y', 'ret_3M', 'ret_2M', 'ret_1M'] #['ret_1M', 'ret_2M', 'ret_3M', 'ret_1Y']
+        self.days = [252, 63, 42, 21]
+        self.time_scale = pd.DataFrame(np.sqrt([self.days]), columns = self.periods)
+
+        
+        # self.df = self.df[['day', 'tic', 'close', 'macd', 'rsi_30', 
+        #                    'volatility', 'ret'] + self.periods ]
+
+        self.df[['ret'] + self.periods] = 0.0
+        self.tracking = self.df.loc[0,self.periods ]
 
     def step(self, actions):
-        self.terminal = self.day >= len(self.df.index.unique()) - 1
+        self.terminal = self.day >= self.df.index.get_level_values('day').nunique() - 1
         if self.terminal:
             # print(f"Episode: {self.episode}")
             if self.make_plots:
@@ -145,9 +159,12 @@ class FuturesTradingEnv(StockTradingEnv):
 
             # state: s -> s+1
             self.day += 1
-            self.calc_periods_returns() 
 
             self.data = self.df.loc[self.day, :]
+            upd = self.calc_periods_returns()
+            self.data.loc[:,self.periods] = upd.loc[self.day]
+
+
             if self.turbulence_threshold is not None:
                 if len(self.df.tic.unique()) == 1:
                     self.turbulence = self.data[self.risk_indicator_col]
@@ -188,13 +205,28 @@ class FuturesTradingEnv(StockTradingEnv):
 
 
     def calc_periods_returns(self):
-        periods = {'ret_1M': 21,
-                   'ret_2M': 42,
-                   'ret_3M': 63,
-                   'ret_1Y': 252}
-        sigmas = self.df.loc[self.day, ['volatility', 'tic']].set_index('tic')
 
-        for period,days in periods.items():
-            returns = self.df.loc[self.day - days : self.day, ['ret','tic']].groupby('tic').sum()
-            returns = returns['ret'] / (sigmas['volatility'] * np.sqrt(days))
-            self.df.loc[self.day, period] = pd.array(returns)
+        s = np.array(self.days) 
+        s = np.maximum(self.day - s, np.array([0]))  
+
+        volatility = self.df.loc[(self.day, slice(None)), ['volatility']]
+        volatility.columns = pd.RangeIndex(start=0, stop=1, step=1)
+        norm = 1 / (volatility @ self.time_scale)
+               
+               
+        addition = self.df.loc[self.day - 1,['ret','ret','ret','ret']] 
+        addition.columns = self.periods       
+        
+        
+        tmp = {k:v for k,v in zip(s,self.periods)}
+        lower = self.df.loc[(s, slice(None)),'ret']
+        lower = lower.unstack(level=0, )
+        lower.columns = lower.columns.map(tmp)
+
+
+        addition -= lower
+        addition.fillna(0.0, inplace= True)
+        self.tracking += addition
+        update = self.tracking * norm
+ 
+        return update
