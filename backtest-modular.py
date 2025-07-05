@@ -6,11 +6,13 @@ import empyrical as ep
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import gymnasium as gym
 
 from stable_baselines3 import A2C, DDPG, PPO, SAC, TD3
 from pypfopt.efficient_frontier import EfficientFrontier
 
 from finrl.agents.stablebaselines3.models import DRLAgent
+from finrl.meta.env_stock_trading.env_futurestrading import FuturesTradingEnv
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 
@@ -19,9 +21,9 @@ from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 # Possible values include 'futures_data' or 'retail_data'
 from config import DATA_TYPE, INDICATORS
 
-TSTP = "20250630-1616"
+TSTP = "20250704-2310"
 
-ALGOS_TO_USE    = ['ppo'] #, 'a2c',  'ddpg', 'td3', 'sac']
+ALGOS_TO_USE    = ['ppo', 'a2c',  'ddpg', 'td3', 'sac']
 TRAIN_FILE      = f'{DATA_TYPE}/train_data.csv'
 BACKTEST_FILE   = f'{DATA_TYPE}/trade_data.csv'
 TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models/{TSTP}'
@@ -42,7 +44,7 @@ TRADE_END_DATE = '2021-10-29'
 # TRADE_START_DATE = '2015-01-24' # '2020-07-01'
 # TRADE_END_DATE = '2015-07-31' # '2021-10-29'
 
-
+TradingEnv = FuturesTradingEnv  # StockTradingEnv
 
 # Map algorithm names to their classes
 MODEL_CLASSES = {
@@ -53,11 +55,14 @@ MODEL_CLASSES = {
     'sac': SAC,
 }
 
-def load_and_prepare_data(file_path: str) -> pd.DataFrame:
-    df = pd.read_csv(file_path)
-    df = df.set_index(df.columns[0])
-    df.index.names = ['']
-    return df
+def load_and_filter_data(path: str) -> pd.DataFrame:
+    df = pd.read_csv(path, parse_dates=['date'])
+
+    # rebuild integer day index
+    df = df.reset_index(drop=True)
+    day_map = {d: i for i, d in enumerate(sorted(df['date'].unique()))}
+    df['day'] = df['date'].map(day_map)
+    return df.set_index(['day','tic'], drop=False)
 
 
 def load_trained_models(algos: list) -> dict:
@@ -71,7 +76,7 @@ def load_trained_models(algos: list) -> dict:
     return models
 
 
-def run_drl_backtests(models: dict, env: StockTradingEnv) -> dict:
+def run_drl_backtests(models: dict, env: gym.Env) -> dict:
     results = {}
     for algo, model in models.items():
         if model is not None:
@@ -115,6 +120,7 @@ def fetch_dji_series() -> pd.Series:
         ticker_list=['dji']
     ).fetch_data()
     df_dji = df_dji[['date', 'close']]
+    df_dji.date = pd.to_datetime(df_dji.date)
     first = df_dji['close'].iloc[0]
     scaled = df_dji['close'].div(first).mul(INITIAL_AMOUNT)
     return pd.Series(scaled.values, index=df_dji['date'], name='dji')
@@ -139,8 +145,8 @@ def plot_and_save(results: pd.DataFrame, filename: str):
 def main():
     plt.ion()
     # Load datasets
-    train = load_and_prepare_data(TRAIN_FILE)
-    trade = load_and_prepare_data(BACKTEST_FILE)
+    train = load_and_filter_data(TRAIN_FILE)
+    trade = load_and_filter_data(BACKTEST_FILE)
     print('TRAIN head:\n', train.head(), '\n')
     print('TRADE head:\n', trade.head(), '\n')
     print('Shapes:', train.shape, trade.shape)
@@ -165,19 +171,19 @@ def main():
         'action_space': stock_dim,
         'reward_scaling': REWARD_SCALING
     }
-    env = StockTradingEnv(
+    env = TradingEnv(
         df=trade,
         turbulence_threshold=TURB_THRESHOLD,
         risk_indicator_col=RISK_COL,
         **env_kwargs
     )
 
-    # Run DRL backtests
-    drl_results = run_drl_backtests(models, env)
-
     # Compute MVO and DJIA baselines
     mvo_series = compute_mvo(train, trade)
     dji_series = fetch_dji_series()
+
+    # Run DRL backtests
+    drl_results = run_drl_backtests(models, env)
 
     result = pd.DataFrame({
         'a2c': drl_results.get('a2c'),

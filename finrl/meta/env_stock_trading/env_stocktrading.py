@@ -562,6 +562,7 @@ class StockTradingEnv(gym.Env):
         return [seed]
 
     def get_sb_env(self):
+        # *get stable baselines env
         e = DummyVecEnv([lambda: self])
         obs = e.reset()
         return e, obs
