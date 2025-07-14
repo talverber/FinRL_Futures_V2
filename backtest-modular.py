@@ -3,57 +3,21 @@ import sys
 import subprocess
 from pathlib import Path
 import empyrical as ep
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import gymnasium as gym
 
-from stable_baselines3 import A2C, DDPG, PPO, SAC, TD3
 from pypfopt.efficient_frontier import EfficientFrontier
 
 from finrl.agents.stablebaselines3.models import DRLAgent
-from finrl.meta.env_stock_trading.env_futurestrading import FuturesTradingEnv
-from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 
-# Hyperparameters and configuration
-# DATA_TYPE is defined in config.py
-# Possible values include 'futures_data' or 'retail_data'
-from config import DATA_TYPE, INDICATORS
+from FinRL_Futures_V2.config import  TRAIN_FILE, TRAINED_MODEL_DIR, RESULTS_DIR, \
+    ALGOS_TO_USE, INDICATORS, INITIAL_AMOUNT, COST_PCT, HMAX, REWARD_SCALING, TradingEnv,\
+    BACKTEST_FILE, TRADE_END_DATE, TRADE_START_DATE, MODEL_CLASSES, TURB_THRESHOLD, PLOT_SIZE, RISK_COL, \
+    TRAIN_START_DATE, TRAIN_END_DATE, HYPERPARAMS, N_ENVS, TIC_TO_USE, TOTAL_TIMESTEPS
 
-TSTP = "20250704-2310"
-
-ALGOS_TO_USE    = ['ppo', 'a2c',  'ddpg', 'td3', 'sac']
-TRAIN_FILE      = f'{DATA_TYPE}/train_data.csv'
-BACKTEST_FILE   = f'{DATA_TYPE}/trade_data.csv'
-TRAINED_MODEL_DIR = f'{DATA_TYPE}/trained_models/{TSTP}'
-
-
-INITIAL_AMOUNT  = 1_000_000
-COST_PCT        = 0.001
-HMAX            = 100
-REWARD_SCALING  = 1e-4
-TURB_THRESHOLD  = 70
-RISK_COL        = 'vix'
-OUTPUT_PLOT     = f'{DATA_TYPE}/results/{TSTP}/backtest.png'
-# Plot dimensions (width, height) in inches
-PLOT_SIZE       = (15, 5)
-
-TRADE_START_DATE = '2020-07-01'
-TRADE_END_DATE = '2021-10-29'
-# TRADE_START_DATE = '2015-01-24' # '2020-07-01'
-# TRADE_END_DATE = '2015-07-31' # '2021-10-29'
-
-TradingEnv = FuturesTradingEnv  # StockTradingEnv
-
-# Map algorithm names to their classes
-MODEL_CLASSES = {
-    'a2c': A2C,
-    'ddpg': DDPG,
-    'ppo': PPO,
-    'td3': TD3,
-    'sac': SAC,
-}
+#from config import *
 
 def load_and_filter_data(path: str) -> pd.DataFrame:
     df = pd.read_csv(path, parse_dates=['date'])
@@ -195,7 +159,7 @@ def main():
         'dji': dji_series,
     })
 
-    result.to_csv(f'{DATA_TYPE}/results/{TSTP}/backtest.csv')
+    result.to_csv(f'{RESULTS_DIR}/backtest.csv')
 
     metrics = {}
     for col in result.columns:
@@ -212,9 +176,9 @@ def main():
         }
 
     df_metrics = pd.DataFrame(metrics).T
-    df_metrics.to_csv(f"{DATA_TYPE}/results/{TSTP}/backtest_metrics.csv", float_format="%.6f")
+    df_metrics.to_csv(f"{RESULTS_DIR}/backtest_metrics.csv", float_format="%.6f")
     print("✔ metrics written → backtest_metrics.csv")
-    plot_and_save(result, OUTPUT_PLOT)
+    plot_and_save(result, f'{RESULTS_DIR}/backtest.png')
 
 if __name__ == '__main__':
     main()

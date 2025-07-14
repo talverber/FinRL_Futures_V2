@@ -2,7 +2,8 @@ import os
 import pandas as pd
 import yfinance as yf
 from finrl.meta.preprocessor.preprocessors import FeatureEngineer, data_split
-from finrl.config import INDICATORS
+
+from config import BACKTEST_FILE, INDICATORS, RAW_DATA_FILE, TRADE_START_DATE,TRADE_END_DATE, TRAIN_FILE, TRAIN_START_DATE, TRAIN_END_DATE
 
 FUTURES_TICKERS = [
     'ES=F', 'CL=F', 'GC=F', 'NG=F', 'SI=F', 'ZC=F', 'ZS=F', 'ZW=F',
@@ -10,11 +11,6 @@ FUTURES_TICKERS = [
     'PA=F', 'RB=F', 'HO=F', 'M2K=F', 'MNQ=F', 'YM=F', 'HG=F', 'ZT=F',
     'ZN=F', 'ZB=F'
 ]
-
-TRAIN_START_DATE = '2009-01-01'
-TRAIN_END_DATE   = '2020-07-01'
-TRADE_START_DATE = '2020-07-01'
-TRADE_END_DATE   = '2021-10-29'
 
 def download_futures_data(tickers, start, end):
     df_list = []
@@ -44,11 +40,14 @@ def download_futures_data(tickers, start, end):
 
 # STEP 1: Download
 
-RAW_DATA = 'futures_data/raw_data.csv'
-# df_raw = download_futures_data(FUTURES_TICKERS, TRAIN_START_DATE, TRADE_END_DATE)
-# df_raw.to_csv(RAW_DATA)
+if not os.path.exists(RAW_DATA_FILE):
+    print("Downloading futures data...")
+    df_raw = download_futures_data(FUTURES_TICKERS, TRAIN_START_DATE, TRADE_END_DATE)
 
-df_raw = pd.read_csv(RAW_DATA)
+    df_raw.to_csv(RAW_DATA_FILE)
+else: 
+    print(f"Using cached raw data from {RAW_DATA_FILE}")
+    df_raw = pd.read_csv(RAW_DATA_FILE)
 
 
 # STEP 2: Add 'day' column
@@ -123,8 +122,7 @@ train = train[ordered_cols]
 trade = trade[ordered_cols]
 
 # STEP 9: Save to CSV (no extra Pandas index)
-os.makedirs('futures_data', exist_ok=True)
-train.to_csv('futures_data/train_data.csv', index=False)
-trade.to_csv('futures_data/trade_data.csv', index=False)
+train.to_csv(TRAIN_FILE, index=False)
+trade.to_csv(BACKTEST_FILE, index=False)
 
-print("✅ futures_data/train_data.csv and trade_data.csv generated.")
+print(f"✅ {TRAIN_FILE} and {BACKTEST_FILE} generated.")
