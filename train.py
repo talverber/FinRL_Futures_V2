@@ -22,7 +22,7 @@ RESULTS_DIR = f'{DATA_TYPE}/results/{TSTP}'
 TRAIN_FILE        = f'{DATA_TYPE}/train_data.csv'  # Preprocessed training CSV
 
 
-ALGOS_TO_USE      = ['ppo', 'ddpg', 'a2c', 'td3', 'sac']               # Algorithms to train
+ALGOS_TO_USE      = ['ppo', 'ddpg', 'a2c', 'td3', 'sac'] #  # Algorithms to train
 TIC_TO_USE        = None
 # TIC_TO_USE = ['AAPL', 'INTC'] # Tickers/symbols to include
 # If None, use entire dataset
@@ -97,7 +97,7 @@ INITIAL_AMOUNT = 1_000_000   # starting cash
 REWARD_SCALING = 1e-4        # reward scale
 
 # Number of parallel envs to use
-N_ENVS    = min(14, multiprocessing.cpu_count())   # cap per‑algo envs
+N_ENVS    = min(12, multiprocessing.cpu_count())   # cap per‑algo envs
 MAX_PROCS = 2                                     # cap # concurrent algos
 
 def load_and_filter_data(path: str) -> pd.DataFrame:

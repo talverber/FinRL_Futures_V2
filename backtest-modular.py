@@ -21,7 +21,7 @@ from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
 # Possible values include 'futures_data' or 'retail_data'
 from config import DATA_TYPE, INDICATORS
 
-TSTP = "20250704-2310"
+TSTP = "20250706-1505"
 
 ALGOS_TO_USE    = ['ppo', 'a2c',  'ddpg', 'td3', 'sac']
 TRAIN_FILE      = f'{DATA_TYPE}/train_data.csv'
@@ -44,7 +44,7 @@ TRADE_END_DATE = '2021-10-29'
 # TRADE_START_DATE = '2015-01-24' # '2020-07-01'
 # TRADE_END_DATE = '2015-07-31' # '2021-10-29'
 
-TradingEnv = FuturesTradingEnv  # StockTradingEnv
+TradingEnv = FuturesTradingEnv  # StockTradingEnv  #
 
 # Map algorithm names to their classes
 MODEL_CLASSES = {
@@ -212,8 +212,9 @@ def main():
         }
 
     df_metrics = pd.DataFrame(metrics).T
-    df_metrics.to_csv(f"{DATA_TYPE}/results/{TSTP}/backtest_metrics.csv", float_format="%.6f")
-    print("✔ metrics written → backtest_metrics.csv")
+    fpath = f"{DATA_TYPE}/results/{TSTP}/backtest_metrics.csv"
+    df_metrics.to_csv(fpath, float_format="%.6f")
+    print(f"✔ metrics written → {fpath}")
     plot_and_save(result, OUTPUT_PLOT)
 
 if __name__ == '__main__':
