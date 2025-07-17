@@ -176,9 +176,10 @@ def main():
         }
 
     df_metrics = pd.DataFrame(metrics).T
-    df_metrics.to_csv(f"{RESULTS_DIR}/backtest_metrics.csv", float_format="%.6f")
-    print("✔ metrics written → backtest_metrics.csv")
-    plot_and_save(result, f'{RESULTS_DIR}/backtest.png')
+    fpath = f"{DATA_TYPE}/results/{TSTP}/backtest_metrics.csv"
+    df_metrics.to_csv(fpath, float_format="%.6f")
+    print(f"✔ metrics written → {fpath}")
+    plot_and_save(result, OUTPUT_PLOT)
 
 if __name__ == '__main__':
     main()

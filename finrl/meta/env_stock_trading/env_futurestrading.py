@@ -32,7 +32,7 @@ class FuturesTradingEnv(StockTradingEnv):
 
         self.periods = ['ret_1Y', 'ret_3M', 'ret_2M', 'ret_1M'] #['ret_1M', 'ret_2M', 'ret_3M', 'ret_1Y']
         self.days = [252, 63, 42, 21]
-        self.time_scale = pd.DataFrame(np.sqrt([self.days]), columns = self.periods)
+        self.time_scale = pd.DataFrame([self.days], columns = self.periods)
 
         
         # self.df = self.df[['day', 'tic', 'close', 'macd', 'rsi_30', 
@@ -181,11 +181,11 @@ class FuturesTradingEnv(StockTradingEnv):
 
             mu = 1 # a.k.a. "Contract Unit" or "Contract Multiplier"
             transaction_cost_term = 0 # 
-            sigma_tgt = 0.05
+            sigma_tgt = 15
 
             PnL = end_value - begin_value # a.k.a. returns
 
-            self.df.loc[self.day-1, "ret"] = np.array(PnL)
+            self.df.loc[self.day, "ret"] = np.array(PnL)
 
             sigmas = np.array(self.data.volatility)
        
@@ -211,7 +211,7 @@ class FuturesTradingEnv(StockTradingEnv):
 
         volatility = self.df.loc[(self.day, slice(None)), ['volatility']]
         volatility.columns = pd.RangeIndex(start=0, stop=1, step=1)
-        norm = 1 / (volatility @ self.time_scale)
+        norm = 1 / np.sqrt(volatility @ self.time_scale)
                
                
         addition = self.df.loc[self.day - 1,['ret','ret','ret','ret']] 
