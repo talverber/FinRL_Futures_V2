@@ -1,8 +1,7 @@
 import os
 import pandas as pd
-
-
-from config import  TRAIN_FILE, TRAINED_MODEL_DIR, RESULTS_DIR, \
+from datetime import datetime
+from config import  TRAIN_FILE, DATA_DIR, \
     ALGOS_TO_USE, INDICATORS, INITIAL_AMOUNT, COST_PCT, HMAX, REWARD_SCALING, TradingEnv,\
     BACKTEST_FILE, TRADE_END_DATE, TRADE_START_DATE, MODEL_CLASSES, TURB_THRESHOLD, PLOT_SIZE, RISK_COL, \
     TRAIN_START_DATE, TRAIN_END_DATE, HYPERPARAMS, N_ENVS, TIC_TO_USE, TOTAL_TIMESTEPS
@@ -69,7 +68,7 @@ def make_single_env(df):
         reward_scaling=REWARD_SCALING
     )
 
-def train_and_save(algo: str):
+def train(algo: str, results_dir: str):
     """
     Train a single algorithm using parallel envs.
     """
@@ -81,7 +80,7 @@ def train_and_save(algo: str):
     model = agent.get_model(algo, model_kwargs=HYPERPARAMS.get(algo, {}))
 
     # Configure logger
-    log_path = os.path.join(RESULTS_DIR, algo)
+    log_path = os.path.join(results_dir, algo)
     new_logger = configure(log_path, ['stdout', 'csv', 'tensorboard'])
     model.set_logger(new_logger)
 
@@ -92,7 +91,9 @@ def train_and_save(algo: str):
         tb_log_name=algo,
         total_timesteps=timesteps
     )
+    return trained
 
+def save_model(algo: str, trained, TRAINED_MODEL_DIR: str):        
     # Save
     save_path = os.path.join(TRAINED_MODEL_DIR, f'agent_{algo}')
     trained.save(save_path)
@@ -102,15 +103,21 @@ def train_and_save(algo: str):
 # =========================
 # Main execution
 # =========================
-def main():
+def main(TRAINED_MODEL_DIR, RESULTS_DIR):
     check_and_make_directories([TRAINED_MODEL_DIR, RESULTS_DIR])
     for algo in ALGOS_TO_USE:
         try:
-            train_and_save(algo)
+            trained = train(algo, RESULTS_DIR)
+            save_model(algo, trained, TRAINED_MODEL_DIR)
         except Exception as e:
             print(f"❌ Error training {algo}: {e}")
             break
 
 if __name__ == '__main__':
     print(os.getcwd())
-    main()
+    
+    TSTP = datetime.now().strftime("%Y%m%d-%H%M") # Timestamp of the run 
+    RUN_DIR = f'{DATA_DIR}/{TSTP}'
+    TRAINED_MODEL_DIR = f'{RUN_DIR}/trained_models/'
+    RESULTS_DIR       = f'{RUN_DIR}/results/'
+    main(TRAINED_MODEL_DIR, RESULTS_DIR)

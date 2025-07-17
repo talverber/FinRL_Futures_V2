@@ -9,7 +9,7 @@ import gymnasium as gym
 
 from pypfopt.efficient_frontier import EfficientFrontier
 
-from config import  TRAIN_FILE, TRAINED_MODEL_DIR, RESULTS_DIR, \
+from config import  TRAIN_FILE, DATA_DIR, \
     ALGOS_TO_USE, INDICATORS, INITIAL_AMOUNT, COST_PCT, HMAX, REWARD_SCALING, TradingEnv,\
     BACKTEST_FILE, TRADE_END_DATE, TRADE_START_DATE, MODEL_CLASSES, TURB_THRESHOLD, PLOT_SIZE, RISK_COL, \
     TRAIN_START_DATE, TRAIN_END_DATE, HYPERPARAMS, N_ENVS, TIC_TO_USE, TOTAL_TIMESTEPS
@@ -30,7 +30,7 @@ def load_and_filter_data(path: str) -> pd.DataFrame:
     return df.set_index(['day','tic'], drop=False)
 
 
-def load_trained_models(algos: list) -> dict:
+def load_trained_models(algos: list, TRAINED_MODEL_DIR) -> dict:
     models = {}
     for algo in algos:
         model_path = Path(TRAINED_MODEL_DIR) / f"agent_{algo}"
@@ -107,7 +107,7 @@ def plot_and_save(results: pd.DataFrame, filename: str):
         os.startfile(filename)
 
 
-def main():
+def main(TRAINED_MODEL_DIR, RESULTS_DIR):
     plt.ion()
     # Load datasets
     train = load_and_filter_data(TRAIN_FILE)
@@ -117,7 +117,7 @@ def main():
     print('Shapes:', train.shape, trade.shape)
 
     # Load DRL models
-    models = load_trained_models(ALGOS_TO_USE)
+    models = load_trained_models(ALGOS_TO_USE, TRAINED_MODEL_DIR)
 
     # Prepare trading environment
     stock_dim = len(trade['tic'].unique())
@@ -183,4 +183,11 @@ def main():
     plot_and_save(result, f"{RESULTS_DIR}/backtest.png")
 
 if __name__ == '__main__':
-    main()
+    from datetime import datetime
+    print(os.getcwd())
+    
+    TSTP = datetime.now().strftime("%Y%m%d-%H%M") # Timestamp of the run 
+    RUN_DIR = f'{DATA_DIR}/{TSTP}'
+    TRAINED_MODEL_DIR = f'{RUN_DIR}/trained_models/'
+    RESULTS_DIR       = f'{RUN_DIR}/results/'
+    main(TRAINED_MODEL_DIR, RESULTS_DIR)

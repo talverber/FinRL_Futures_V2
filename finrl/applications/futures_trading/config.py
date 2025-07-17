@@ -19,14 +19,11 @@ load_namespace()
 
 # Data folder to use for training and backtesting
 # Possible options include 'futures_data' or 'retail_data'
-from datetime import datetime
 import multiprocessing
-import numpy as np
 
 from stable_baselines3 import A2C, DDPG, PPO, SAC, TD3
 from finrl.meta.env_stock_trading.env_futurestrading import FuturesTradingEnv
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
-from finrl.main import check_and_make_directories
 
 # =========================
 # Configuration
@@ -59,17 +56,10 @@ elif ENV_TYPE == 'stocks':
 else:
     raise NotImplementedError("unknown DATA_TYPE: " + DATA_TYPE)
 
-#TSTP = datetime.now().strftime("%Y%m%d-%H%M") # Timestamp of the run 
-TSTP = "20250717-1745"
-
-check_and_make_directories([f'data/{DATA_TYPE}',])
-TRAINED_MODEL_DIR = f'data/{DATA_TYPE}/trained_models/{TSTP}'
-RESULTS_DIR       = f'data/{DATA_TYPE}/results/{TSTP}'
-TRAIN_FILE        = f'data/{DATA_TYPE}/train_data.csv'  # Preprocessed training CSV
-BACKTEST_FILE     = f'data/{DATA_TYPE}/trade_data.csv'
-RAW_DATA_FILE     = f'data/{DATA_TYPE}/raw_data.csv' 
-
-
+DATA_DIR          = f'data/{DATA_TYPE}'
+TRAIN_FILE        = f'{DATA_DIR}/train_data.csv'  # Preprocessed training CSV
+BACKTEST_FILE     = f'{DATA_DIR}/trade_data.csv'
+RAW_DATA_FILE     = f'{DATA_DIR}/raw_data.csv' 
 
 TIC_TO_USE        = None
 # TIC_TO_USE = ['AAPL', 'INTC'] # Tickers/symbols to include
