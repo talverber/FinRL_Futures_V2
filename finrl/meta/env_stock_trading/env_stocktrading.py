@@ -228,8 +228,15 @@ class StockTradingEnv(gym.Env):
         plt.savefig(f"results/account_value_trade_{self.episode}.png")
         plt.close()
 
+    @property
+    def total_days(self):
+        """
+        Returns the total number of days in the dataset
+        """
+        return self.df.index.get_level_values('day').nunique() - 1
+
     def step(self, actions):
-        self.terminal = self.day >= len(self.df.index.unique()) - 1
+        self.terminal = self.day >= self.total_days
         if self.terminal:
             # print(f"Episode: {self.episode}")
             if self.make_plots:

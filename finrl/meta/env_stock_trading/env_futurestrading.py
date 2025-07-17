@@ -42,7 +42,7 @@ class FuturesTradingEnv(StockTradingEnv):
         self.tracking = self.df.loc[0,self.periods ]
 
     def step(self, actions):
-        self.terminal = self.day >= self.df.index.get_level_values('day').nunique() - 1
+        self.terminal = self.day >= self.total_days
         if self.terminal:
             # print(f"Episode: {self.episode}")
             if self.make_plots:
