@@ -183,11 +183,11 @@ def main(TRAINED_MODEL_DIR, RESULTS_DIR):
     plot_and_save(result, f"{RESULTS_DIR}/backtest.png")
 
 if __name__ == '__main__':
-    from datetime import datetime
     print(os.getcwd())
     
-    TSTP = datetime.now().strftime("%Y%m%d-%H%M") # Timestamp of the run 
-    RUN_DIR = f'{DATA_DIR}/{TSTP}'
+    # If running as separate script, need to define where 
+    # the models and results of a run are 
+    RUN_DIR = "data/futures/20250718-1442"
     TRAINED_MODEL_DIR = f'{RUN_DIR}/trained_models/'
     RESULTS_DIR       = f'{RUN_DIR}/results/'
     main(TRAINED_MODEL_DIR, RESULTS_DIR)

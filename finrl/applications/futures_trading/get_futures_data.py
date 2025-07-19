@@ -2,10 +2,11 @@ import os
 import pandas as pd
 import yfinance as yf
 
-from config import TRAIN_FILE, BACKTEST_FILE, INDICATORS, RAW_DATA_FILE, \
+from config import ENV_TYPE, TRAIN_FILE, BACKTEST_FILE, INDICATORS, RAW_DATA_FILE, DATA_DIR, \
                    TRADE_START_DATE,TRADE_END_DATE, TRAIN_START_DATE, TRAIN_END_DATE
 
 from finrl.meta.preprocessor.preprocessors import FeatureEngineer, data_split
+from finrl.main import check_and_make_directories
 
 FUTURES_TICKERS = [
     'ES=F', 'CL=F', 'GC=F', 'NG=F', 'SI=F', 'ZC=F', 'ZS=F', 'ZW=F',
@@ -56,10 +57,12 @@ def add_returns(df):
     return df
 
 def main():
+    check_and_make_directories([DATA_DIR])
+
     # STEP 1: Download
 
     if not os.path.exists(RAW_DATA_FILE):
-        print("Downloading futures data...")
+        print("Downloading futures data to", RAW_DATA_FILE)
         df_raw = download_futures_data(FUTURES_TICKERS, TRAIN_START_DATE, TRADE_END_DATE)
 
         df_raw.to_csv(RAW_DATA_FILE)
@@ -95,9 +98,13 @@ def main():
 
     # STEP 5: Sort so each date-tic is together (just for cleanliness)
     processed = processed.sort_values(['date','tic']).reset_index(drop=True)
+    
+    env_futures_cols = []
+    if ENV_TYPE == 'futures':
+        processed = add_volatility(processed)
+        processed = add_returns(processed)
+        env_futures_cols = ['volatility', 'ret','ret_1M','ret_2M','ret_3M','ret_1Y']
 
-    processed = add_volatility(processed)
-    processed = add_returns(processed)
 
     # STEP 6: Split into train/trade
     train = data_split(processed, TRAIN_START_DATE, TRAIN_END_DATE)
@@ -118,9 +125,7 @@ def main():
     ordered_cols = [
         'date_idx','date','tic','close','high','low','open','volume','day',
         'macd','boll_ub','boll_lb','rsi_30','cci_30','dx_30',
-        'close_30_sma','close_60_sma','vix','turbulence', 'volatility',
-        'ret','ret_1M','ret_2M','ret_3M','ret_1Y'
-    ]
+        'close_30_sma','close_60_sma','vix','turbulence'] + env_futures_cols
     train = train[ordered_cols]
     trade = trade[ordered_cols]
 
