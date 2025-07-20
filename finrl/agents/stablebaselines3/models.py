@@ -72,7 +72,7 @@ class TensorboardCallback(BaseCallback):
             self.logger.record(key="train/reward_min", value=None)
             self.logger.record(key="train/reward_mean", value=None)
             self.logger.record(key="train/reward_max", value=None)
-            print("Logging Error:", error)
+            #print("Logging Error:", error)
         return True
 
 
@@ -161,9 +161,9 @@ class DRLAgent:
         # state_memory=[] #add memory pool to store states
 
         test_env.reset()
-        max_steps = len(environment.df.index.unique()) - 1
+        max_steps = environment.df.index.get_level_values('day').nunique() - 1
 
-        for i in range(len(environment.df.index.unique())):
+        for i in range(max_steps ):
             action, _states = model.predict(test_obs, deterministic=deterministic)
             # account_memory = test_env.env_method(method_name="save_asset_memory")
             # actions_memory = test_env.env_method(method_name="save_action_memory")
