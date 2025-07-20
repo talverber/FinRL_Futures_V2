@@ -91,12 +91,26 @@ def fetch_dji_series() -> pd.Series:
     return pd.Series(scaled.values, index=df_dji['date'], name='dji')
 
 
-def plot_and_save(results: pd.DataFrame, filename: str):
+def plot_and_save(results: pd.DataFrame, filename: str, dataset: str, algos: list):
+    """Plot backtest curves and save the figure.
+
+    Parameters
+    ----------
+    results : pd.DataFrame
+        DataFrame of portfolio values per algorithm.
+    filename : str
+        Path to save the plot.
+    dataset : str
+        Name of the dataset used (e.g. ``reg_data`` or ``futures_data``).
+    algos : list
+        List of algorithm names that were backtested.
+    """
+
     results.plot(figsize=PLOT_SIZE)
-    # plt.tight_layout()
-    plt.xlabel('Date')
-    plt.ylabel('Portfolio Value (USD)')
-    plt.title('Backtest: DRL vs MVO vs DJIA')
+    plt.xlabel("Date")
+    plt.ylabel("Portfolio Value (USD)")
+    algo_title = " vs ".join([a.upper() for a in algos] + ["MVO", "DJIA"])
+    plt.title(f"Backtest on {dataset}: {algo_title}")
     plt.savefig(filename, dpi=150)
     # Auto-open based on OS
     if sys.platform == 'darwin':
