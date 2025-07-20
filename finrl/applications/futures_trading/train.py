@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import inspect
+import json
 from datetime import datetime
 from config import  TRAIN_FILE, DATA_DIR, \
     ALGOS_TO_USE, INDICATORS, INITIAL_AMOUNT, COST_PCT, HMAX, REWARD_SCALING, TradingEnv,\
@@ -74,7 +76,7 @@ def train(algo: str, results_dir: str):
     """
     df = load_and_filter_data(TRAIN_FILE)
     vec_env = make_vec_env(df)
-    #vec_env = make_single_env(df) for debugging without multiprocessing
+    #vec_env = make_single_env(df) # for debugging without multiprocessing
 
     agent = DRLAgent(env=vec_env)
     model = agent.get_model(algo, model_kwargs=HYPERPARAMS.get(algo, {}))
@@ -100,11 +102,38 @@ def save_model(algo: str, trained, TRAINED_MODEL_DIR: str):
     print(f"Saved {algo} model to {save_path}")
 
 
+def save_run_config(RUN_DIR):
+    """
+    Saves all the run parameters defined in config.py file for this run
+    """
+    try:
+        module_name = "config"
+        module = __import__(module_name)
+    except ImportError:
+        print(f"Error: Module '{module_name}' not found.")
+        return {}
+
+    variables = {}
+    for name, value in vars(module).items():
+        # Exclude built-in attributes and functions
+        if not name.startswith('__') and not inspect.isfunction(value)\
+            and not inspect.isclass(value) and not inspect.ismodule(value):
+            variables[name] = value
+    variables.pop('MODEL_CLASSES')
+
+    with open(f'{RUN_DIR}/run_config.json', 'w') as f : 
+        json.dump(variables,f, indent=4)
+    return variables
+
+
 # =========================
 # Main execution
 # =========================
-def main(TRAINED_MODEL_DIR, RESULTS_DIR):
+def main(RUN_DIR):
+    TRAINED_MODEL_DIR = f'{RUN_DIR}/trained_models/'
+    RESULTS_DIR       = f'{RUN_DIR}/results/'
     check_and_make_directories([TRAINED_MODEL_DIR, RESULTS_DIR])
+    save_run_config(RUN_DIR)
     for algo in ALGOS_TO_USE:
         try:
             trained = train(algo, RESULTS_DIR)
@@ -112,12 +141,12 @@ def main(TRAINED_MODEL_DIR, RESULTS_DIR):
         except Exception as e:
             print(f"❌ Error training {algo}: {e}")
             break
+    print("Training complete. The results for this run are in:", RUN_DIR)
+    return RUN_DIR
 
 if __name__ == '__main__':
     print(os.getcwd())
     
     TSTP = datetime.now().strftime("%Y%m%d-%H%M") # Timestamp of the run 
     RUN_DIR = f'{DATA_DIR}/{TSTP}'
-    TRAINED_MODEL_DIR = f'{RUN_DIR}/trained_models/'
-    RESULTS_DIR       = f'{RUN_DIR}/results/'
-    main(TRAINED_MODEL_DIR, RESULTS_DIR)
+    main(RUN_DIR)

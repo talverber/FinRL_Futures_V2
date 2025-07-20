@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "cwd": "finrl/applications/futures_trading"
+            "cwd": "/home/linuxu/Michael/RLproj/FinRL_Futures_V2/finrl/applications/futures_trading/"
         }
     ]
 }

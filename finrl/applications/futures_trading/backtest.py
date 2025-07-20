@@ -107,7 +107,7 @@ def plot_and_save(results: pd.DataFrame, filename: str):
         os.startfile(filename)
 
 
-def main(TRAINED_MODEL_DIR, RESULTS_DIR):
+def main(RUN_DIR):
     plt.ion()
     # Load datasets
     train = load_and_filter_data(TRAIN_FILE)
@@ -115,6 +115,11 @@ def main(TRAINED_MODEL_DIR, RESULTS_DIR):
     print('TRAIN head:\n', train.head(), '\n')
     print('TRADE head:\n', trade.head(), '\n')
     print('Shapes:', train.shape, trade.shape)
+
+    TRAINED_MODEL_DIR = f'{RUN_DIR}/trained_models/'
+    RESULTS_DIR       = f'{RUN_DIR}/results/'
+
+    print("Starting testing phase of the run. The results will be in:", RUN_DIR)
 
     # Load DRL models
     models = load_trained_models(ALGOS_TO_USE, TRAINED_MODEL_DIR)
@@ -187,7 +192,5 @@ if __name__ == '__main__':
     
     # If running as separate script, need to define where 
     # the models and results of a run are 
-    RUN_DIR = "data/futures/20250718-1442"
-    TRAINED_MODEL_DIR = f'{RUN_DIR}/trained_models/'
-    RESULTS_DIR       = f'{RUN_DIR}/results/'
-    main(TRAINED_MODEL_DIR, RESULTS_DIR)
+    RUN_DIR = "data/futures/20250720-1748"
+    main(RUN_DIR)
